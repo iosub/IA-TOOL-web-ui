@@ -2,6 +2,7 @@ import logging
 
 from dotenv import load_dotenv
 
+# su puta
 load_dotenv()
 import argparse
 import asyncio
@@ -20,7 +21,7 @@ from browser_use.browser.context import (
 from gradio.themes import Base, Citrus, Default, Glass, Monochrome, Ocean, Origin, Soft
 
 from src.agent.custom_agent import CustomAgent
-from src.agent.custom_prompts import CustomSystemPrompt
+from src.agent.custom_prompts import CustomAgentMessagePrompt, CustomSystemPrompt
 from src.browser.custom_browser import CustomBrowser
 from src.browser.custom_context import BrowserContextConfig
 from src.controller.custom_controller import CustomController
@@ -244,10 +245,14 @@ async def run_org_agent(
         # Clear any previous stop request
         _global_agent_state.clear_stop()
 
+        extra_chromium_args = [f"--window-size={window_w},{window_h}"]
         if use_own_browser:
             chrome_path = os.getenv("CHROME_PATH", None)
             if chrome_path == "":
                 chrome_path = None
+            chrome_user_data = os.getenv("CHROME_USER_DATA", None)
+            if chrome_user_data:
+                extra_chromium_args += [f"--user-data-dir={chrome_user_data}"]
         else:
             chrome_path = None
 
@@ -257,7 +262,7 @@ async def run_org_agent(
                     headless=headless,
                     disable_security=disable_security,
                     chrome_instance_path=chrome_path,
-                    extra_chromium_args=[f"--window-size={window_w},{window_h}"],
+                    extra_chromium_args=extra_chromium_args,
                 )
             )
 
@@ -346,10 +351,14 @@ async def run_custom_agent(
         # Clear any previous stop request
         _global_agent_state.clear_stop()
 
+        extra_chromium_args = [f"--window-size={window_w},{window_h}"]
         if use_own_browser:
             chrome_path = os.getenv("CHROME_PATH", None)
             if chrome_path == "":
                 chrome_path = None
+            chrome_user_data = os.getenv("CHROME_USER_DATA", None)
+            if chrome_user_data:
+                extra_chromium_args += [f"--user-data-dir={chrome_user_data}"]
         else:
             chrome_path = None
 
@@ -362,7 +371,7 @@ async def run_custom_agent(
                     headless=headless,
                     disable_security=disable_security,
                     chrome_instance_path=chrome_path,
-                    extra_chromium_args=[f"--window-size={window_w},{window_h}"],
+                    extra_chromium_args=extra_chromium_args,
                 )
             )
 
@@ -390,6 +399,7 @@ async def run_custom_agent(
             browser_context=_global_browser_context,
             controller=controller,
             system_prompt_class=CustomSystemPrompt,
+            agent_prompt_class=CustomAgentMessagePrompt,
             max_actions_per_step=max_actions_per_step,
             agent_state=_global_agent_state,
             tool_calling_method=tool_calling_method,
