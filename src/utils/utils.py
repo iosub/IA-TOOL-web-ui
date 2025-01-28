@@ -146,8 +146,10 @@ model_names = {
     ],
     "ollama": [
         "qwen2.5",
-        "llama2:7b",
+        "llama3.2:3b",
+        "llama3.2-vision",
         "deepseek-r1:14b",
+        "deepseek-r1",
         "mannix/llama3.1-8b-abliterated:tools-q4_k_m",
         "MFDoom/deepseek-r1-tool-calling:14b",
         "llama2-uncensored:latest",

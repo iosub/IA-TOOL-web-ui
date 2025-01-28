@@ -807,7 +807,7 @@ def create_ui(config, theme_name="Ocean"):
                     browser_view = gr.HTML(
                         value="<h1 style='width:80vw; height:50vh'>Waiting for browser session...</h1>",
                         label="Live Browser View",
-                )
+                    )
 
             with gr.TabItem("📁 Configuration", id=5):
                 with gr.Group():
