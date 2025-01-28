@@ -4,13 +4,14 @@ import time
 from pathlib import Path
 from typing import Dict, Optional
 
+import gradio as gr
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
-import gradio as gr
 
-from .llm import DeepSeekR1ChatOpenAI, DeepSeekR1ChatOllama
+from .llm import DeepSeekR1ChatOllama, DeepSeekR1ChatOpenAI
+
 
 def get_llm_model(provider: str, **kwargs):
     """
@@ -93,20 +94,21 @@ def get_llm_model(provider: str, **kwargs):
             base_url = os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434")
         else:
             base_url = kwargs.get("base_url")
-            
-        if kwargs.get("model_name", "qwen2.5:7b").startswith("deepseek-r1"):
+
+        if kwargs.get("model_name", "qwen2.5").startswith("deepseek-r1"):  # iosu
             return DeepSeekR1ChatOllama(
                 model=kwargs.get("model_name", "deepseek-r1:7b"),
                 temperature=kwargs.get("temperature", 0.0),
-                num_ctx=kwargs.get("num_ctx", 32000),
+                num_ctx=kwargs.get("num_ctx", 16000),  # iosu
                 base_url=kwargs.get("base_url", base_url),
             )
         else:
             return ChatOllama(
-                model=kwargs.get("model_name", "qwen2.5:7b"),
+                model=kwargs.get("model_name", "qwen2.5"),  # iosu
                 temperature=kwargs.get("temperature", 0.0),
-                num_ctx=kwargs.get("num_ctx", 32000),
+                num_ctx=kwargs.get("num_ctx", 16000),  # iosu
                 base_url=kwargs.get("base_url", base_url),
+                format="json",  # iosu
             )
     elif provider == "azure_openai":
         if not kwargs.get("base_url", ""):
@@ -126,22 +128,39 @@ def get_llm_model(provider: str, **kwargs):
         )
     else:
         raise ValueError(f"Unsupported provider: {provider}")
-    
+
+
 # Predefined model names for common providers
 model_names = {
     "anthropic": ["claude-3-5-sonnet-20240620", "claude-3-opus-20240229"],
     "openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"],
     "deepseek": ["deepseek-chat", "deepseek-reasoner"],
-    "gemini": ["gemini-2.0-flash-exp", "gemini-2.0-flash-thinking-exp", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b-latest", "gemini-2.0-flash-thinking-exp-1219" ],
-    "ollama": ["qwen2.5:7b", "llama2:7b", "deepseek-r1:14b", "deepseek-r1:32b"],
-    "azure_openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"]
+    "gemini": [
+        "gemini-2.0-flash-exp",
+        "gemini-2.0-flash-thinking-exp",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-flash-8b-latest",
+        "gemini-2.0-flash-thinking-exp-1219",
+    ],
+    "ollama": [
+        "qwen2.5",
+        "llama2:7b",
+        "deepseek-r1:14b",
+        "mannix/llama3.1-8b-abliterated:tools-q4_k_m",
+        "MFDoom/deepseek-r1-tool-calling:14b",
+        "llama2-uncensored:latest",
+        "phi4:latest",
+    ],
+    "azure_openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"],
 }
+
 
 # Callback to update the model name dropdown based on the selected provider
 def update_model_dropdown(llm_provider, api_key=None, base_url=None):
     """
     Update the model name dropdown with predefined models for the selected provider.
     """
+    base_url = ""  # iosu
     # Use API keys from .env if not provided
     if not api_key:
         api_key = os.getenv(f"{llm_provider.upper()}_API_KEY", "")
@@ -150,10 +169,17 @@ def update_model_dropdown(llm_provider, api_key=None, base_url=None):
 
     # Use predefined models for the selected provider
     if llm_provider in model_names:
-        return gr.Dropdown(choices=model_names[llm_provider], value=model_names[llm_provider][0], interactive=True)
+        return gr.Dropdown(
+            choices=model_names[llm_provider],
+            value=model_names[llm_provider][0],
+            interactive=True,
+        ), base_url  # iosu
     else:
-        return gr.Dropdown(choices=[], value="", interactive=True, allow_custom_value=True)
-        
+        return gr.Dropdown(
+            choices=[], value="", interactive=True, allow_custom_value=True
+        )
+
+
 def encode_image(img_path):
     if not img_path:
         return None
@@ -162,10 +188,12 @@ def encode_image(img_path):
     return image_data
 
 
-def get_latest_files(directory: str, file_types: list = ['.webm', '.zip']) -> Dict[str, Optional[str]]:
+def get_latest_files(
+    directory: str, file_types: list = [".webm", ".zip"]
+) -> Dict[str, Optional[str]]:
     """Get the latest recording and trace files"""
     latest_files: Dict[str, Optional[str]] = {ext: None for ext in file_types}
-    
+
     if not os.path.exists(directory):
         os.makedirs(directory, exist_ok=True)
         return latest_files
@@ -180,12 +208,16 @@ def get_latest_files(directory: str, file_types: list = ['.webm', '.zip']) -> Di
                     latest_files[file_type] = str(latest)
         except Exception as e:
             print(f"Error getting latest {file_type} file: {e}")
-            
+
     return latest_files
+
+
 async def capture_screenshot(browser_context):
     """Capture and encode a screenshot"""
     # Extract the Playwright browser instance
-    playwright_browser = browser_context.browser.playwright_browser  # Ensure this is correct.
+    playwright_browser = (
+        browser_context.browser.playwright_browser
+    )  # Ensure this is correct.
 
     # Check if the browser instance is valid and if an existing context can be reused
     if playwright_browser and playwright_browser.contexts:
@@ -209,12 +241,8 @@ async def capture_screenshot(browser_context):
 
     # Take screenshot
     try:
-        screenshot = await active_page.screenshot(
-            type='jpeg',
-            quality=75,
-            scale="css"
-        )
-        encoded = base64.b64encode(screenshot).decode('utf-8')
+        screenshot = await active_page.screenshot(type="jpeg", quality=75, scale="css")
+        encoded = base64.b64encode(screenshot).decode("utf-8")
         return encoded
-    except Exception as e:
+    except Exception:
         return None
