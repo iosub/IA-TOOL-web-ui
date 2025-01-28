@@ -101,6 +101,7 @@ def get_llm_model(provider: str, **kwargs):
                 temperature=kwargs.get("temperature", 0.0),
                 num_ctx=kwargs.get("num_ctx", 16000),  # iosu
                 base_url=kwargs.get("base_url", base_url),
+                format="json",  # iosu
             )
         else:
             return ChatOllama(
