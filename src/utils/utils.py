@@ -10,7 +10,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
-from .llm import DeepSeekR1ChatOpenAI
+from .llm import DeepSeekR1ChatOllama, DeepSeekR1ChatOpenAI
 
 
 def get_llm_model(provider: str, **kwargs):
@@ -90,12 +90,26 @@ def get_llm_model(provider: str, **kwargs):
             google_api_key=api_key,
         )
     elif provider == "ollama":
-        return ChatOllama(
-            model=kwargs.get("model_name", "qwen2.5"),
-            temperature=kwargs.get("temperature", 0.0),
-            num_ctx=kwargs.get("num_ctx", 16000),
-            base_url=kwargs.get("base_url", "http://host.docker.internal:11434"),
-        )
+        if not kwargs.get("base_url", ""):
+            base_url = os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434")
+        else:
+            base_url = kwargs.get("base_url")
+
+        if "deepseek-r1" in kwargs.get("model_name", "qwen2.5:7b"):
+            return DeepSeekR1ChatOllama(
+                model=kwargs.get("model_name", "deepseek-r1:14b"),
+                temperature=kwargs.get("temperature", 0.0),
+                num_ctx=kwargs.get("num_ctx", 32000),
+                base_url=kwargs.get("base_url", base_url),
+            )
+        else:
+            return ChatOllama(
+                model=kwargs.get("model_name", "qwen2.5:7b"),
+                temperature=kwargs.get("temperature", 0.0),
+                num_ctx=kwargs.get("num_ctx", 32000),
+                num_predict=kwargs.get("num_predict", 1024),
+                base_url=kwargs.get("base_url", base_url),
+            )
     elif provider == "azure_openai":
         if not kwargs.get("base_url", ""):
             base_url = os.getenv("AZURE_OPENAI_ENDPOINT", "")
@@ -128,13 +142,7 @@ model_names = {
         "gemini-1.5-flash-8b-latest",
         "gemini-2.0-flash-thinking-exp-1219",
     ],
-    "ollama": [
-        "qwen2.5",
-        "mannix/llama3.1-8b-abliterated:tools-q4_k_m",
-        "MFDoom/deepseek-r1-tool-calling:14b",
-        "llama2-uncensored:latest",
-        "phi4:latest",
-    ],
+    "ollama": ["qwen2.5:7b", "llama2:7b", "deepseek-r1:14b", "deepseek-r1:32b"],
     "azure_openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"],
 }
 

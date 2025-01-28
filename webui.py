@@ -20,7 +20,7 @@ from browser_use.browser.context import (
 from gradio.themes import Base, Citrus, Default, Glass, Monochrome, Ocean, Origin, Soft
 
 from src.agent.custom_agent import CustomAgent
-from src.agent.custom_prompts import CustomSystemPrompt
+from src.agent.custom_prompts import CustomAgentMessagePrompt, CustomSystemPrompt
 from src.browser.custom_browser import CustomBrowser
 from src.browser.custom_context import BrowserContextConfig
 from src.controller.custom_controller import CustomController
@@ -91,7 +91,7 @@ async def run_browser_agent(
     max_steps,
     use_vision,
     max_actions_per_step,
-    tool_call_in_content,
+    tool_calling_method,
 ):
     global _global_agent_state
     _global_agent_state.clear_stop()  # Clear any previous stop requests
@@ -144,7 +144,7 @@ async def run_browser_agent(
                 max_steps=max_steps,
                 use_vision=use_vision,
                 max_actions_per_step=max_actions_per_step,
-                tool_call_in_content=tool_call_in_content,
+                tool_calling_method=tool_calling_method,
             )
         elif agent_type == "custom":
             (
@@ -170,7 +170,7 @@ async def run_browser_agent(
                 max_steps=max_steps,
                 use_vision=use_vision,
                 max_actions_per_step=max_actions_per_step,
-                tool_call_in_content=tool_call_in_content,
+                tool_calling_method=tool_calling_method,
             )
         else:
             raise ValueError(f"Invalid agent type: {agent_type}")
@@ -232,7 +232,7 @@ async def run_org_agent(
     max_steps,
     use_vision,
     max_actions_per_step,
-    tool_call_in_content,
+    tool_calling_method,
 ):
     try:
         global _global_browser, _global_browser_context, _global_agent_state
@@ -240,10 +240,14 @@ async def run_org_agent(
         # Clear any previous stop request
         _global_agent_state.clear_stop()
 
+        extra_chromium_args = [f"--window-size={window_w},{window_h}"]
         if use_own_browser:
             chrome_path = os.getenv("CHROME_PATH", None)
             if chrome_path == "":
                 chrome_path = None
+            chrome_user_data = os.getenv("CHROME_USER_DATA", None)
+            if chrome_user_data:
+                extra_chromium_args += [f"--user-data-dir={chrome_user_data}"]
         else:
             chrome_path = None
 
@@ -253,7 +257,7 @@ async def run_org_agent(
                     headless=headless,
                     disable_security=disable_security,
                     chrome_instance_path=chrome_path,
-                    extra_chromium_args=[f"--window-size={window_w},{window_h}"],
+                    extra_chromium_args=extra_chromium_args,
                 )
             )
 
@@ -278,7 +282,7 @@ async def run_org_agent(
             browser=_global_browser,
             browser_context=_global_browser_context,
             max_actions_per_step=max_actions_per_step,
-            tool_call_in_content=tool_call_in_content,
+            tool_calling_method=tool_calling_method,
         )
         history = await agent.run(max_steps=max_steps)
 
@@ -334,7 +338,7 @@ async def run_custom_agent(
     max_steps,
     use_vision,
     max_actions_per_step,
-    tool_call_in_content,
+    tool_calling_method,
 ):
     try:
         global _global_browser, _global_browser_context, _global_agent_state
@@ -342,10 +346,14 @@ async def run_custom_agent(
         # Clear any previous stop request
         _global_agent_state.clear_stop()
 
+        extra_chromium_args = [f"--window-size={window_w},{window_h}"]
         if use_own_browser:
             chrome_path = os.getenv("CHROME_PATH", None)
             if chrome_path == "":
                 chrome_path = None
+            chrome_user_data = os.getenv("CHROME_USER_DATA", None)
+            if chrome_user_data:
+                extra_chromium_args += [f"--user-data-dir={chrome_user_data}"]
         else:
             chrome_path = None
 
@@ -358,7 +366,7 @@ async def run_custom_agent(
                     headless=headless,
                     disable_security=disable_security,
                     chrome_instance_path=chrome_path,
-                    extra_chromium_args=[f"--window-size={window_w},{window_h}"],
+                    extra_chromium_args=extra_chromium_args,
                 )
             )
 
@@ -386,9 +394,10 @@ async def run_custom_agent(
             browser_context=_global_browser_context,
             controller=controller,
             system_prompt_class=CustomSystemPrompt,
+            agent_prompt_class=CustomAgentMessagePrompt,
             max_actions_per_step=max_actions_per_step,
-            tool_call_in_content=tool_call_in_content,
             agent_state=_global_agent_state,
+            tool_calling_method=tool_calling_method,
         )
         history = await agent.run(max_steps=max_steps)
 
@@ -450,7 +459,7 @@ async def run_with_stream(
     max_steps,
     use_vision,
     max_actions_per_step,
-    tool_call_in_content,
+    tool_calling_method,
 ):
     global _global_agent_state
     stream_vw = 80
@@ -478,7 +487,7 @@ async def run_with_stream(
             max_steps=max_steps,
             use_vision=use_vision,
             max_actions_per_step=max_actions_per_step,
-            tool_call_in_content=tool_call_in_content,
+            tool_calling_method=tool_calling_method,
         )
         # Add HTML content at the start of the result array
         html_content = f"<h1 style='width:{stream_vw}vw; height:{stream_vh}vh'>Using browser...</h1>"
@@ -510,7 +519,7 @@ async def run_with_stream(
                     max_steps=max_steps,
                     use_vision=use_vision,
                     max_actions_per_step=max_actions_per_step,
-                    tool_call_in_content=tool_call_in_content,
+                    tool_calling_method=tool_calling_method,
                 )
             )
 
@@ -686,32 +695,38 @@ def create_ui(config, theme_name="Ocean"):
                         value=config["agent_type"],
                         info="Select the type of agent to use",
                     )
-                    max_steps = gr.Slider(
-                        minimum=1,
-                        maximum=200,
-                        value=config["max_steps"],
-                        step=1,
-                        label="Max Run Steps",
-                        info="Maximum number of steps the agent will take",
-                    )
-                    max_actions_per_step = gr.Slider(
-                        minimum=1,
-                        maximum=20,
-                        value=config["max_actions_per_step"],
-                        step=1,
-                        label="Max Actions per Step",
-                        info="Maximum number of actions the agent will take per step",
-                    )
-                    use_vision = gr.Checkbox(
-                        label="Use Vision",
-                        value=config["use_vision"],
-                        info="Enable visual processing capabilities",
-                    )
-                    tool_call_in_content = gr.Checkbox(
-                        label="Use Tool Calls in Content",
-                        value=config["tool_call_in_content"],
-                        info="Enable Tool Calls in content",
-                    )
+                    with gr.Column():
+                        max_steps = gr.Slider(
+                            minimum=1,
+                            maximum=200,
+                            value=config["max_steps"],
+                            step=1,
+                            label="Max Run Steps",
+                            info="Maximum number of steps the agent will take",
+                        )
+                        max_actions_per_step = gr.Slider(
+                            minimum=1,
+                            maximum=20,
+                            value=config["max_actions_per_step"],
+                            step=1,
+                            label="Max Actions per Step",
+                            info="Maximum number of actions the agent will take per step",
+                        )
+                    with gr.Column():
+                        use_vision = gr.Checkbox(
+                            label="Use Vision",
+                            value=config["use_vision"],
+                            info="Enable visual processing capabilities",
+                        )
+                        tool_calling_method = gr.Dropdown(
+                            label="Tool Calling Method",
+                            value=config["tool_calling_method"],
+                            interactive=True,
+                            allow_custom_value=True,  # Allow users to input custom model names
+                            choices=["auto", "json_schema", "function_calling"],
+                            info="Tool Calls Funtion Name",
+                            visible=False,
+                        )
 
             with gr.TabItem("🔧 LLM Configuration", id=2):
                 with gr.Group():
@@ -867,7 +882,7 @@ def create_ui(config, theme_name="Ocean"):
                         max_steps,
                         max_actions_per_step,
                         use_vision,
-                        tool_call_in_content,
+                        tool_calling_method,
                         llm_provider,
                         llm_model_name,
                         llm_temperature,
@@ -895,7 +910,7 @@ def create_ui(config, theme_name="Ocean"):
                         max_steps,
                         max_actions_per_step,
                         use_vision,
-                        tool_call_in_content,
+                        tool_calling_method,
                         llm_provider,
                         llm_model_name,
                         llm_temperature,
@@ -976,7 +991,7 @@ def create_ui(config, theme_name="Ocean"):
                         max_steps,
                         use_vision,
                         max_actions_per_step,
-                        tool_call_in_content,
+                        tool_calling_method,
                     ],
                     outputs=[
                         browser_view,  # Browser view
