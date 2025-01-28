@@ -1,5 +1,3 @@
-import pdb
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,9 +31,7 @@ async def test_browser_use_org():
     # )
 
     llm = utils.get_llm_model(
-        provider="deepseek",
-        model_name="deepseek-chat",
-        temperature=0.8
+        provider="deepseek", model_name="deepseek-chat", temperature=0.8
     )
 
     window_w, window_h = 1920, 1080
@@ -64,7 +60,7 @@ async def test_browser_use_org():
             task="go to google.com and type 'OpenAI' click search and give me the first url",
             llm=llm,
             browser_context=browser_context,
-            use_vision=use_vision
+            use_vision=use_vision,
         )
         history: AgentHistoryList = await agent.run(max_steps=10)
 
@@ -85,8 +81,8 @@ async def test_browser_use_org():
 
 
 async def test_browser_use_custom():
-    from browser_use.browser.context import BrowserContextWindowSize
     from browser_use.browser.browser import BrowserConfig
+    from browser_use.browser.context import BrowserContextWindowSize
     from playwright.async_api import async_playwright
 
     from src.agent.custom_agent import CustomAgent
@@ -109,7 +105,7 @@ async def test_browser_use_custom():
         provider="gemini",
         model_name="gemini-2.0-flash-exp",
         temperature=1.0,
-        api_key=os.getenv("GOOGLE_API_KEY", "")
+        api_key=os.getenv("GOOGLE_API_KEY", ""),
     )
 
     # llm = utils.get_llm_model(
@@ -119,7 +115,7 @@ async def test_browser_use_custom():
     # )
 
     # llm = utils.get_llm_model(
-    #     provider="ollama", model_name="qwen2.5:7b", temperature=0.8
+    #     provider="ollama", model_name="qwen2.5", temperature=0.8
     # )
 
     controller = CustomController()
@@ -181,7 +177,7 @@ async def test_browser_use_custom():
                 system_prompt_class=CustomSystemPrompt,
                 use_vision=use_vision,
                 tool_call_in_content=tool_call_in_content,
-                max_actions_per_step=max_actions_per_step
+                max_actions_per_step=max_actions_per_step,
             )
             history: AgentHistoryList = await agent.run(max_steps=10)
 
@@ -215,9 +211,8 @@ async def test_browser_use_custom():
 
 
 async def test_browser_use_custom_v2():
-    from browser_use.browser.context import BrowserContextWindowSize
     from browser_use.browser.browser import BrowserConfig
-    from playwright.async_api import async_playwright
+    from browser_use.browser.context import BrowserContextWindowSize
 
     from src.agent.custom_agent import CustomAgent
     from src.agent.custom_prompts import CustomSystemPrompt
@@ -243,13 +238,11 @@ async def test_browser_use_custom_v2():
     # )
 
     llm = utils.get_llm_model(
-        provider="deepseek",
-        model_name="deepseek-reasoner",
-        temperature=0.8
+        provider="deepseek", model_name="deepseek-reasoner", temperature=0.8
     )
 
     # llm = utils.get_llm_model(
-    #     provider="ollama", model_name="qwen2.5:7b", temperature=0.5
+    #     provider="ollama", model_name="qwen2.5", temperature=0.5
     # )
 
     controller = CustomController()
@@ -297,7 +290,7 @@ async def test_browser_use_custom_v2():
             system_prompt_class=CustomSystemPrompt,
             use_vision=use_vision,
             tool_call_in_content=tool_call_in_content,
-            max_actions_per_step=max_actions_per_step
+            max_actions_per_step=max_actions_per_step,
         )
         history: AgentHistoryList = await agent.run(max_steps=10)
 
@@ -328,6 +321,7 @@ async def test_browser_use_custom_v2():
             await playwright.stop()
         if browser:
             await browser.close()
+
 
 if __name__ == "__main__":
     # asyncio.run(test_browser_use_org())
