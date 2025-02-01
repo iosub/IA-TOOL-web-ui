@@ -95,22 +95,22 @@ def get_llm_model(provider: str, **kwargs):
         else:
             base_url = kwargs.get("base_url")
 
-        if "deepseek-r1" in kwargs.get("model_name", "qwen2.5"):
+        if "deepseek-r" in kwargs.get("model_name", "qwen2.5"):
             return DeepSeekR1ChatOllama(
                 model=kwargs.get("model_name", "deepseek-r1:14b"),
-                temperature=kwargs.get("temperature", 0.0),
+                temperature=kwargs.get("temperature", 0.0),  # iosu
                 num_ctx=kwargs.get("num_ctx", 16000),  # iosu
                 base_url=kwargs.get("base_url", base_url),
-                format="json",  # iosu
+                # format="json",  # iosu
             )
         else:
             return ChatOllama(
                 model=kwargs.get("model_name", "qwen2.5"),  # iosu
                 temperature=kwargs.get("temperature", 0.0),
-                num_ctx=kwargs.get("num_ctx", 16000),  # iosu
+                num_ctx=kwargs.get("num_ctx", 32000),  # iosu
                 num_predict=kwargs.get("num_predict", 1024),
                 base_url=kwargs.get("base_url", base_url),
-                format="json",  # iosu
+                # format="json",  # iosu
             )
     elif provider == "azure_openai":
         if not kwargs.get("base_url", ""):
@@ -148,12 +148,21 @@ model_names = {
         "qwen2.5",
         "llama3.2:3b",
         "llama3.2-vision",
-        "deepseek-r1:14b",
-        "deepseek-r1",
         "mannix/llama3.1-8b-abliterated:tools-q4_k_m",
-        "MFDoom/deepseek-r1-tool-calling:14b",
+        "deepseek-r1",
+        "deepseek-r1:8b",
+        "ALIENTELLIGENCE/computervisionengineer:latest",
+        "skyleraiguy/digitaltwin:latest",
+        "artifish/llama3.2-uncensored:latest",
+        "MFDoom/deepseek-r1-tool-calling:7b",
+        "MFDoom/deepseek-r1-tool-calling:8b",
+        "MFDoom/deepseek-r1-tool-calling:7b-qwen-distill-q8_0",
+        "MFDoom/deepseek-r1-tool-calling:8b-llama-distill-q8_0",
+        "deepseek-r1:14b",
         "llama2-uncensored:latest",
         "phi4:latest",
+        "llama3.2-vision-tools:latest",
+        
     ],
     "azure_openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"],
 }

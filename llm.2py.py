@@ -85,12 +85,8 @@ class DeepSeekR1ChatOllama(ChatOllama):
     ) -> AIMessage:
         org_ai_message = await super().ainvoke(input=input)
         org_content = org_ai_message.content
-        if "think" in org_content:  # iosu
-            reasoning_content = org_content.split("</think>")[0].replace("<think>", "")
-            content = org_content.split("</think>")[1]
-        else:
-            reasoning_content = ""
-            content = org_content
+        reasoning_content = org_content.split("</think>")[0].replace("<think>", "")
+        content = org_content.split("</think>")[1]
         if "**JSON Response:**" in content:
             content = content.split("**JSON Response:**")[-1]
         return AIMessage(content=content, reasoning_content=reasoning_content)
@@ -105,13 +101,8 @@ class DeepSeekR1ChatOllama(ChatOllama):
     ) -> AIMessage:
         org_ai_message = super().invoke(input=input)
         org_content = org_ai_message.content
-        if "think" in org_content:  # iosu
-            reasoning_content = org_content.split("</think>")[0].replace("<think>", "")
-            content = org_content.split("</think>")[1]
-        else:
-            reasoning_content = ""
-            content = org_content
-
+        reasoning_content = org_content.split("</think>")[0].replace("<think>", "")
+        content = org_content.split("</think>")[1]
         if "**JSON Response:**" in content:
             content = content.split("**JSON Response:**")[-1]
         return AIMessage(content=content, reasoning_content=reasoning_content)

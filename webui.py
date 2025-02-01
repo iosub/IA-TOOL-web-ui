@@ -229,6 +229,7 @@ async def run_org_agent(
         _global_agent_state.clear_stop()
 
         extra_chromium_args = [f"--window-size={window_w},{window_h}"]
+        # extra_chromium_args += [f"--lang=en_US"] # iosu
         if use_own_browser:
             chrome_path = os.getenv("CHROME_PATH", None)
             if chrome_path == "":
@@ -255,6 +256,7 @@ async def run_org_agent(
                     trace_path=save_trace_path if save_trace_path else None,
                     save_recording_path=save_recording_path if save_recording_path else None,
                     no_viewport=False,
+                    # locale="en_US", #iosu
                     browser_window_size=BrowserContextWindowSize(
                         width=window_w, height=window_h
                     ),
@@ -324,8 +326,9 @@ async def run_custom_agent(
 
         # Clear any previous stop request
         _global_agent_state.clear_stop()
-
+    
         extra_chromium_args = [f"--window-size={window_w},{window_h}"]
+        # extra_chromium_args += [f"--lang=en_US"] # iosu
         if use_own_browser:
             chrome_path = os.getenv("CHROME_PATH", None)
             if chrome_path == "":
@@ -346,6 +349,7 @@ async def run_custom_agent(
                     disable_security=disable_security,
                     chrome_instance_path=chrome_path,
                     extra_chromium_args=extra_chromium_args,
+                    
                 )
             )
 
@@ -355,6 +359,7 @@ async def run_custom_agent(
                     trace_path=save_trace_path if save_trace_path else None,
                     save_recording_path=save_recording_path if save_recording_path else None,
                     no_viewport=False,
+                    # locale="en_US", # iosu
                     browser_window_size=BrowserContextWindowSize(
                         width=window_w, height=window_h
                     ),
@@ -692,7 +697,7 @@ def create_ui(config, theme_name="Ocean"):
                     )
                     llm_model_name = gr.Dropdown(
                         label="Model Name",
-                        choices=utils.model_names['openai'],
+                        choices=utils.model_names['ollama'], #iosu
                         value=config['llm_model_name'],
                         interactive=True,
                         allow_custom_value=True,  # Allow users to input custom model names
