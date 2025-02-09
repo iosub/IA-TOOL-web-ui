@@ -13,7 +13,7 @@ We would like to officially thank [WarmShao](https://github.com/warmshao) for hi
 
 **WebUI:** is built on Gradio and supports most of `browser-use` functionalities. This UI is designed to be user-friendly and enables easy interaction with the browser agent.
 
-**Expanded LLM Support:** We've integrated support for various Large Language Models (LLMs), including: Gemini, OpenAI, Azure OpenAI, Anthropic, DeepSeek, Ollama etc. And we plan to add support for even more models in the future.
+**Expanded LLM Support:** We've integrated support for various Large Language Models (LLMs), including: Google, OpenAI, Azure OpenAI, Anthropic, DeepSeek, Ollama etc. And we plan to add support for even more models in the future.
 
 **Custom Browser Support:** You can use your own browser with our tool, eliminating the need to re-login to sites or deal with other authentication challenges. This feature also supports high-definition screen recording.
 
@@ -57,11 +57,6 @@ Activate the virtual environment:
 - macOS/Linux:
 ```bash
 source .venv/bin/activate
-```
-alternative activation for Windows:
-
-```bash
-.\.venv\Scripts\Activate
 ```
 
 #### Step 3: Install Dependencies

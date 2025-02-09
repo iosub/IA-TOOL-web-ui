@@ -37,7 +37,7 @@ def get_env_value(key, provider):
     env_mappings = {
         "openai": {"api_key": "OPENAI_API_KEY", "base_url": "OPENAI_ENDPOINT"},
         "azure_openai": {"api_key": "AZURE_OPENAI_API_KEY", "base_url": "AZURE_OPENAI_ENDPOINT"},
-        "gemini": {"api_key": "GOOGLE_API_KEY"},
+        "google": {"api_key": "GOOGLE_API_KEY"},
         "deepseek": {"api_key": "DEEPSEEK_API_KEY", "base_url": "DEEPSEEK_ENDPOINT"},
         "mistral": {"api_key": "MISTRAL_API_KEY", "base_url": "MISTRAL_ENDPOINT"},
     }
@@ -92,32 +92,10 @@ def test_openai_model():
     config = LLMConfig(provider="openai", model_name="gpt-4o")
     test_llm(config, "Describe this image", "assets/examples/test.png")
 
-def test_gemini_model():
-    # you need to enable your api key first: https://ai.google.dev/palm_docs/oauth_quickstart
-    from langchain_core.messages import HumanMessage
-    from src.utils import utils
-
-    llm = utils.get_llm_model(
-        provider="gemini",
-        model_name="gemini-2.0-flash-exp",
-        temperature=0.8,
-        api_key=os.getenv("GOOGLE_API_KEY", "")
-    )
-
-    image_path = "assets/examples/test.png"
-    image_data = utils.encode_image(image_path)
-    message = HumanMessage(
-        content=[
-            {"type": "text", "text": "describe this image"},
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{image_data}"},
-            },
-        ]
-    )
-    ai_msg = llm.invoke([message])
-    print(ai_msg.content)
-
+def test_google_model():
+    # Enable your API key first if you haven't: https://ai.google.dev/palm_docs/oauth_quickstart
+    config = LLMConfig(provider="google", model_name="gemini-2.0-flash-exp")
+    test_llm(config, "Describe this image", "assets/examples/test.png")
 
 def test_azure_openai_model():
     from langchain_core.messages import HumanMessage
@@ -212,7 +190,7 @@ def test_deepseek_r1_ollama_model():
 
 if __name__ == '__main__':
     # test_openai_model()
-    # test_gemini_model()
+    # test_google_model()
     # test_azure_openai_model()
     #test_deepseek_model()
     # test_ollama_model()
