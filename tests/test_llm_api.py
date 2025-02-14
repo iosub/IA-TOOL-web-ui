@@ -40,6 +40,7 @@ def get_env_value(key, provider):
         "google": {"api_key": "GOOGLE_API_KEY"},
         "deepseek": {"api_key": "DEEPSEEK_API_KEY", "base_url": "DEEPSEEK_ENDPOINT"},
         "mistral": {"api_key": "MISTRAL_API_KEY", "base_url": "MISTRAL_ENDPOINT"},
+        "alibaba": {"api_key": "ALIBABA_API_KEY", "base_url": "ALIBABA_ENDPOINT"},
     }
 
     if provider in env_mappings and key in env_mappings[provider]:
@@ -65,11 +66,11 @@ def test_llm(config, query, image_path=None, system_message=None):
 
     # For other providers, use the standard configuration
     llm = utils.get_llm_model(
-        provider="openai",
-        model_name="gpt-4o",
-        temperature=0.8,
-        base_url=os.getenv("OPENAI_ENDPOINT", ""),
-        api_key=os.getenv("OPENAI_API_KEY", "")
+        provider=config.provider,
+        model_name=config.model_name,
+        temperature=config.temperature,
+        base_url=config.base_url or get_env_value("base_url", config.provider),
+        api_key=config.api_key or get_env_value("api_key", config.provider)
     )
 
     # Prepare messages for non-Ollama models
@@ -98,97 +99,30 @@ def test_google_model():
     test_llm(config, "Describe this image", "assets/examples/test.png")
 
 def test_azure_openai_model():
-    from langchain_core.messages import HumanMessage
-    from src.utils import utils
-
-    llm = utils.get_llm_model(
-        provider="azure_openai",
-        model_name="gpt-4o",
-        temperature=0.8,
-        base_url=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
-        api_key=os.getenv("AZURE_OPENAI_API_KEY", "")
-    )
-    image_path = "assets/examples/test.png"
-    image_data = utils.encode_image(image_path)
-    message = HumanMessage(
-        content=[
-            {"type": "text", "text": "describe this image"},
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{image_data}"},
-            },
-        ]
-    )
-    ai_msg = llm.invoke([message])
-    print(ai_msg.content)
-
+    config = LLMConfig(provider="azure_openai", model_name="gpt-4o")
+    test_llm(config, "Describe this image", "assets/examples/test.png")
 
 def test_deepseek_model():
-    from langchain_core.messages import HumanMessage
-    from src.utils import utils
-
-    llm = utils.get_llm_model(
-        provider="deepseek",
-        model_name="deepseek-chat",
-        temperature=0.8,
-        base_url=os.getenv("DEEPSEEK_ENDPOINT", ""),
-        api_key=os.getenv("DEEPSEEK_API_KEY", "")
-    )
-    message = HumanMessage(
-        content=[
-            {"type": "text", "text": "who are you?"}
-        ]
-    )
-    ai_msg = llm.invoke([message])
-    print(ai_msg.content)
-
+    config = LLMConfig(provider="deepseek", model_name="deepseek-chat")
+    test_llm(config, "Who are you?")
 
 def test_deepseek_r1_model():
-    from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-    from src.utils import utils
-
-    llm = utils.get_llm_model(
-        provider="deepseek",
-        model_name="deepseek-reasoner",
-        temperature=0.8,
-        base_url=os.getenv("DEEPSEEK_ENDPOINT", ""),
-        api_key=os.getenv("DEEPSEEK_API_KEY", "")
-    )
-    messages = []
-    sys_message = SystemMessage(
-        content=[{"type": "text", "text": "you are a helpful AI assistant"}]
-    )
-    messages.append(sys_message)
-    user_message = HumanMessage(
-        content=[
-            {"type": "text", "text": "9.11 and 9.8, which is greater?"}
-        ]
-    )
-    messages.append(user_message)
-    ai_msg = llm.invoke(messages)
-    print(ai_msg.reasoning_content)
-    print(ai_msg.content)
-    print(llm.model_name)
-    pdb.set_trace()
-
+    config = LLMConfig(provider="deepseek", model_name="deepseek-reasoner")
+    test_llm(config, "Which is greater, 9.11 or 9.8?", system_message="You are a helpful AI assistant.")
 
 def test_ollama_model():
-    from langchain_ollama import ChatOllama
+    config = LLMConfig(provider="ollama", model_name="qwen2.5:7b")
+    test_llm(config, "Sing a ballad of LangChain.")
 
-    llm = ChatOllama(model="qwen2.5:7b")
-    ai_msg = llm.invoke("Sing a ballad of LangChain.")
-    print(ai_msg.content)
-    
 def test_deepseek_r1_ollama_model():
-    from src.utils.llm import DeepSeekR1ChatOllama
+    config = LLMConfig(provider="ollama", model_name="deepseek-r1:14b")
+    test_llm(config, "How many 'r's are in the word 'strawberry'?")
 
-    llm = DeepSeekR1ChatOllama(model="deepseek-r1:14b")
-    ai_msg = llm.invoke("how many r in strawberry?")
-    print(ai_msg.content)
-    pdb.set_trace()
+def test_mistral_model():
+    config = LLMConfig(provider="mistral", model_name="pixtral-large-latest")
+    test_llm(config, "Describe this image", "assets/examples/test.png")
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test_openai_model()
     # test_google_model()
     # test_azure_openai_model()

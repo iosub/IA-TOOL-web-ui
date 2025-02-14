@@ -16,7 +16,8 @@ class CustomSystemPrompt(SystemPrompt):
         Returns the important rules for the agent.
         """
         text = r"""
-    1. RESPONSE FORMAT: You must ALWAYS respond with valid JSON in this exact format:
+    1. RESPONSE FORMAT: You must ALWAYS respond with valid JSON in this exact format,
+    THIS IS MANDATORY, ALLWAYS INCLUDE ALL PROPERTIES, FOR EMPTLY VALUES USE "":
        {
          "current_state": {
            "prev_action_evaluation": "Success|Failed|Unknown - Analyze the current elements and the image to check if the previous goals/actions are successful like intended by the task. Ignore the action result. The website is the ground truth. Also mention if something unexpected happened like new suggestions in an input field. Shortly state why/why not. Note that the result you output must be consistent with the reasoning you output afterwards. If you consider it to be 'Failed,' you should reflect on this during your thought.",

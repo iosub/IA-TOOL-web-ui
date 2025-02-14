@@ -1,3 +1,5 @@
+import pdb
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -35,7 +37,7 @@ async def test_browser_use_org():
     #     model_name="deepseek-chat",
     #     temperature=0.8
     # )
-
+    
     llm = utils.get_llm_model(
         provider="ollama", model_name="deepseek-r1:14b", temperature=0.5
     )
@@ -49,7 +51,7 @@ async def test_browser_use_org():
             chrome_path = None
     else:
         chrome_path = None
-
+        
     tool_calling_method = "json_schema"  # setting to json_schema when using ollma
 
     browser = Browser(
@@ -75,7 +77,7 @@ async def test_browser_use_org():
             llm=llm,
             browser_context=browser_context,
             use_vision=use_vision,
-            tool_calling_method=tool_calling_method,
+            tool_calling_method=tool_calling_method
         )
         history: AgentHistoryList = await agent.run(max_steps=10)
 
@@ -96,17 +98,18 @@ async def test_browser_use_org():
 
 
 async def test_browser_use_custom():
-    from browser_use.browser.browser import BrowserConfig
     from browser_use.browser.context import BrowserContextWindowSize
+    from browser_use.browser.browser import BrowserConfig
+    from playwright.async_api import async_playwright
 
     from src.agent.custom_agent import CustomAgent
-    from src.agent.custom_prompts import CustomAgentMessagePrompt, CustomSystemPrompt
+    from src.agent.custom_prompts import CustomSystemPrompt, CustomAgentMessagePrompt
     from src.browser.custom_browser import CustomBrowser
     from src.browser.custom_context import BrowserContextConfig
     from src.controller.custom_controller import CustomController
 
     window_w, window_h = 1920, 1080
-
+    
     # llm = utils.get_llm_model(
     #     provider="openai",
     #     model_name="gpt-4o",
@@ -135,7 +138,7 @@ async def test_browser_use_custom():
     #     model_name="deepseek-reasoner",
     #     temperature=0.8
     # )
-
+    
     # llm = utils.get_llm_model(
     #     provider="deepseek",
     #     model_name="deepseek-chat",
@@ -145,7 +148,7 @@ async def test_browser_use_custom():
     # llm = utils.get_llm_model(
     #     provider="ollama", model_name="qwen2.5:7b", temperature=0.5
     # )
-
+    
     # llm = utils.get_llm_model(
     #     provider="ollama", model_name="deepseek-r1:14b", temperature=0.5
     # )
@@ -154,7 +157,7 @@ async def test_browser_use_custom():
     use_own_browser = True
     disable_security = True
     use_vision = False  # Set to False when using DeepSeek
-
+    
     max_actions_per_step = 1
     playwright = None
     browser = None
@@ -199,7 +202,7 @@ async def test_browser_use_custom():
             system_prompt_class=CustomSystemPrompt,
             agent_prompt_class=CustomAgentMessagePrompt,
             use_vision=use_vision,
-            max_actions_per_step=max_actions_per_step,
+            max_actions_per_step=max_actions_per_step
         )
         history: AgentHistoryList = await agent.run(max_steps=100)
 
@@ -351,7 +354,6 @@ async def test_browser_use_parallel():
             await playwright.stop()
         if browser:
             await browser.close()
-
 
 if __name__ == "__main__":
     # asyncio.run(test_browser_use_org())
