@@ -19,7 +19,9 @@ PROVIDER_DISPLAY_NAMES = {
     "azure_openai": "Azure OpenAI",
     "anthropic": "Anthropic",
     "deepseek": "DeepSeek",
-    "google": "Google"
+    "google": "Google",
+    "alibaba": "Alibaba",
+    "moonshot": "MoonShot"
 }
 
 def get_llm_model(provider: str, **kwargs):
@@ -43,7 +45,7 @@ def get_llm_model(provider: str, **kwargs):
             base_url = kwargs.get("base_url")
 
         return ChatAnthropic(
-            model_name=kwargs.get("model_name", "claude-3-5-sonnet-20240620"),
+            model_name=kwargs.get("model_name", "claude-3-5-sonnet-20241022"),
             temperature=kwargs.get("temperature", 0.0),
             base_url=base_url,
             api_key=api_key,
@@ -112,14 +114,14 @@ def get_llm_model(provider: str, **kwargs):
             return DeepSeekR1ChatOllama(
                 model=kwargs.get("model_name", "deepseek-r1:14b"),
                 temperature=kwargs.get("temperature", 0.0),
-                num_ctx=kwargs.get("num_ctx", 16000),
+                num_ctx=kwargs.get("num_ctx", 32000),
                 base_url=base_url,
             )
         else:
             return ChatOllama(
                 model=kwargs.get("model_name", "qwen2.5"),
                 temperature=kwargs.get("temperature", 0.0),
-                num_ctx=kwargs.get("num_ctx", 16000),
+                num_ctx=kwargs.get("num_ctx", 32000),
                 num_predict=kwargs.get("num_predict", 1024),
                 base_url=base_url,
             )
@@ -148,19 +150,34 @@ def get_llm_model(provider: str, **kwargs):
             base_url=base_url,
             api_key=api_key,
         )
+
+    elif provider == "moonshot":
+        return ChatOpenAI(
+            model=kwargs.get("model_name", "moonshot-v1-32k-vision-preview"),
+            temperature=kwargs.get("temperature", 0.0),
+            base_url=os.getenv("MOONSHOT_ENDPOINT"),
+            api_key=os.getenv("MOONSHOT_API_KEY"),
+        )
     else:
         raise ValueError(f"Unsupported provider: {provider}")
-    
+
 # Predefined model names for common providers
 model_names = {
-    "anthropic": ["claude-3-5-sonnet-20240620", "claude-3-opus-20240229"],
+    "anthropic": ["claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20240620", "claude-3-opus-20240229"],
     "openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo", "o3-mini"],
     "deepseek": ["deepseek-chat", "deepseek-reasoner"],
-    "google": ["gemini-2.0-flash-exp", "gemini-2.0-flash-thinking-exp", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b-latest", "gemini-2.0-flash-thinking-exp-01-21"],
-    "ollama": ["qwen2.5", "llama2", "deepseek-r1:14b", "deepseek-r1:32b"],
+    "google": ["gemini-2.0-flash",
+               "gemini-2.0-flash-thinking-exp", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b-latest", "gemini-2.0-flash-thinking-exp-01-21", "gemini-2.0-pro-exp-02-05"],
+    "ollama": ["qwen2.5",
+               "phi4-mini:3.8b-fp16",
+               "granite3.2-vision:2b-fp16", 
+               "deepseek-r1:latest",
+               "qwen2.5-coder:32b",
+               "phi4:latest", "deepseek-r1:14b", "deepseek-r1:32b"],
     "azure_openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"],
     "mistral": ["pixtral-large-latest", "mistral-large-latest", "mistral-small-latest", "ministral-8b-latest"],
-    "alibaba": ["qwen-plus", "qwen-max", "qwen-turbo", "qwen-long"]
+    "alibaba": ["qwen-plus", "qwen-max", "qwen-turbo", "qwen-long"],
+    "moonshot": ["moonshot-v1-32k-vision-preview", "moonshot-v1-8k-vision-preview"],
 }
 
 # Callback to update the model name dropdown based on the selected provider
